@@ -9,3 +9,6 @@ artifacts/
 .vscode/
 *.swp
 *.swo
+env
+.env
+.env.*
