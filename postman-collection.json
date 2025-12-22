@@ -1,0 +1,347 @@
+{
+  "info": {
+    "name": "No-Code UI Automation API",
+    "description": "Postman collection for testing the No-Code UI Automation Backend (Phase 1)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["health"]
+        },
+        "description": "Check if the server is running and healthy"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Navigate to Website",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Browse Example Website\\n  Scenario: User navigates to example.com\\n    Given I navigate to https://example.com\\n    When I wait for the page to load\\n    Then I should see the example page title\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright navigation - visits example.com and verifies page load"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Click Elements",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Click Button Test\\n  Scenario: User clicks on elements\\n    Given I navigate to https://example.com\\n    When I hover over the main heading\\n    And I scroll down the page\\n    Then the page should be scrolled\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright click and scroll actions"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Form Filling (Text Input)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Form Filling\\n  Scenario: User fills a text input field\\n    Given I navigate to https://example.com\\n    When I find an input field and type test data\\n    Then the input should contain the typed text\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright text input and typing actions"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Extract Page Content",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Extract Content\\n  Scenario: User extracts page text content\\n    Given I navigate to https://example.com\\n    When I extract the page content\\n    Then I should see text content from the page\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright content extraction capabilities"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Checkbox Interaction",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Checkbox Test\\n  Scenario: User interacts with checkboxes\\n    Given I navigate to https://example.com\\n    When I find a checkbox on the page\\n    And I check the checkbox\\n    Then the checkbox should be checked\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright checkbox check/uncheck actions"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Dropdown Selection",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Dropdown Selection\\n  Scenario: User selects from a dropdown\\n    Given I navigate to https://example.com\\n    When I find a select dropdown on the page\\n    And I select an option from the dropdown\\n    Then the option should be selected\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright dropdown selection actions"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Wait for Element",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Wait for Element\\n  Scenario: User waits for an element to appear\\n    Given I navigate to https://example.com\\n    When I wait for the main heading to be visible\\n    Then the heading should be present on the page\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright wait for element visibility"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Complex Workflow",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Complex User Workflow\\n  Scenario: User performs multiple actions in sequence\\n    Given I navigate to https://example.com\\n    When I wait for the page to load\\n    And I extract the page title\\n    And I hover over the main heading\\n    And I scroll down the page\\n    Then I should have captured screenshots of each action\",\n  \"retryCount\": 3\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright with a complex multi-step workflow"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Get Page Info",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Get Page Information\\n  Scenario: User retrieves page information\\n    Given I navigate to https://example.com\\n    When I get the page title\\n    And I get the current URL\\n    Then I should have page metadata\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright page information retrieval (title, URL)"
+      },
+      "response": []
+    },
+    {
+      "name": "Playwright Test - Error Handling",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Error Handling\\n  Scenario: Browser handles non-existent elements\\n    Given I navigate to https://example.com\\n    When I try to click a non-existent element with id nonexistent123\\n    Then the error should be gracefully handled\",\n  \"retryCount\": 1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Playwright error handling for non-existent elements"
+      },
+      "response": []
+    },
+    {
+      "name": "Code Generation Test - Verify Generated Playwright Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: Code Generation Test\\n  Scenario: Verify generated Playwright code\\n    Given I navigate to https://example.com\\n    When I click the main heading\\n    And I scroll down\\n    Then I should see generated TypeScript code\",\n  \"retryCount\": 1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test that executable Playwright TypeScript code is generated in response"
+      },
+      "response": []
+    },
+    {
+      "name": "Groq AI Interpretation - Verify Step Understanding",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"featureText\": \"Feature: AI Interpretation\\n  Scenario: Groq AI interprets natural language correctly\\n    Given I navigate to the login page at https://example.com/login\\n    When I enter my email address in the email field\\n    And I type my password in the password field\\n    And I press the login button\\n    Then I should see the dashboard\",\n  \"retryCount\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/execute",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["execute"]
+        },
+        "description": "Test Groq AI interpretation of natural language steps and action mapping"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "timeout",
+      "value": "30000",
+      "type": "number"
+    },
+    {
+      "key": "groq_api_key",
+      "value": "your-groq-api-key-here",
+      "type": "string"
+    },
+    {
+      "key": "groq_model",
+      "value": "mixtral-8x7b-32768",
+      "type": "string"
+    }
+  ]
+}
