@@ -1,0 +1,5 @@
+{
+  "featureText": "Feature: Quick Test\n  Scenario: One step\n    Given I navigate to Leaftaps application",
+  "retryCount": 1,
+  "url": "http://leaftaps.com/opentaps/control/main"
+}

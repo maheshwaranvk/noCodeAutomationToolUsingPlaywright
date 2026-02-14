@@ -1,11 +1,13 @@
 export class ExecuteFeatureRequest {
   featureText: string;
   retryCount: number;
+  targetUrl?: string;
   executionId?: string;
 
-  constructor(featureText: string, retryCount: number = 2, executionId?: string) {
+  constructor(featureText: string, retryCount: number = 2, targetUrl?: string, executionId?: string) {
     this.featureText = featureText;
     this.retryCount = retryCount;
+    this.targetUrl = targetUrl;
     this.executionId = executionId;
   }
 }
@@ -19,6 +21,7 @@ export class ExecuteFeatureResponse {
     description: string;
     status: 'passed' | 'failed';
     duration: number;
+    errorMessage?: string;
   }>;
   generatedCode?: string;
   artifacts: Array<{

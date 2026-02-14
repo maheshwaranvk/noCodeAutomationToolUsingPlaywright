@@ -22,5 +22,6 @@ export interface BrowserExecutorPort {
   getPageTitle(): Promise<string>;
   getPageContent(): Promise<string>;
   navigateTo(url: string): Promise<void>;
+  getVideoPath(): Promise<string | null>;
   close(): Promise<void>;
 }

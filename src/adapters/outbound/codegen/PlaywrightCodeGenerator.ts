@@ -35,7 +35,7 @@ export class PlaywrightCodeGenerator implements CodeGeneratorPort {
   }
 
   private generatePlaywrightCode(request: CodeGenerationRequest): string {
-    const { executionResult, featureText } = request;
+    const { executionResult, featureText, targetUrl } = request;
     const steps = executionResult.stepExecutions;
 
     // Extract scenario name from feature text or use generic name
@@ -74,48 +74,77 @@ test.describe('${scenarioName}', () => {
       if (step.agentDecision) {
         const decision = step.agentDecision;
         const actionType = decision.actionType || 'unknown';
-        const elementDesc = decision.decision || 'element';
-        const selector = decision.selectedElement || 'unknown';
+        const selector = decision.elementSelector || 'unknown';
+        const value = decision.actionValue || '';
 
         switch (actionType) {
           case 'navigate':
-            code += `    await page.goto('https://example.com');\n`;
+            const url = targetUrl || 'https://example.com';
+            code += `    await page.goto('${url}');\n`;
             break;
           case 'click':
-            code += `    await page.click('${selector}'); // ${elementDesc}\n`;
+            if (selector && selector !== 'unknown') {
+              code += `    await page.click('${this.escapeSelector(selector)}');\n`;
+            } else {
+              code += `    // TODO: Click action - selector not found\n`;
+              code += `    // await page.click('${decision.elementDescription || 'button'}');\n`;
+            }
             break;
-          case 'type':
-            code += `    await page.fill('${selector}', '${decision.reasoning || 'text'}'); // ${elementDesc}\n`;
+          case 'type': {
+            const typeValue = value || this.extractValueFromDescription(step.stepDescription);
+            if (selector && selector !== 'unknown') {
+              code += `    await page.fill('${this.escapeSelector(selector)}', '${this.escapeString(typeValue)}');\n`;
+            } else {
+              code += `    // TODO: Type action - selector not found for "${typeValue}"\n`;
+              code += `    // await page.fill('input', '${this.escapeString(typeValue)}');\n`;
+            }
             break;
-          case 'select':
-            code += `    await page.selectOption('${selector}', '${decision.reasoning || 'option'}'); // ${elementDesc}\n`;
+          }
+          case 'select': {
+            const selectValue = value || this.extractValueFromDescription(step.stepDescription);
+            if (selector && selector !== 'unknown') {
+              code += `    await page.selectOption('${this.escapeSelector(selector)}', '${this.escapeString(selectValue)}');\n`;
+            } else {
+              code += `    // TODO: Select action - selector not found for "${selectValue}"\n`;
+              code += `    // await page.selectOption('select', '${this.escapeString(selectValue)}');\n`;
+            }
             break;
+          }
           case 'check':
-            code += `    await page.check('${selector}'); // ${elementDesc}\n`;
+            if (selector && selector !== 'unknown') {
+              code += `    await page.check('${this.escapeSelector(selector)}');\n`;
+            } else {
+              code += `    // TODO: Check action - selector not found\n`;
+              code += `    // await page.check('input[type="checkbox"]');\n`;
+            }
             break;
           case 'uncheck':
-            code += `    await page.uncheck('${selector}'); // ${elementDesc}\n`;
+            if (selector && selector !== 'unknown') {
+              code += `    await page.uncheck('${this.escapeSelector(selector)}');\n`;
+            } else {
+              code += `    // TODO: Uncheck action - selector not found\n`;
+              code += `    // await page.uncheck('input[type="checkbox"]');\n`;
+            }
             break;
           case 'hover':
-            code += `    await page.hover('${selector}'); // ${elementDesc}\n`;
+            if (selector && selector !== 'unknown') {
+              code += `    await page.hover('${this.escapeSelector(selector)}');\n`;
+            } else {
+              code += `    // TODO: Hover action - selector not found\n`;
+              code += `    // await page.hover('element');\n`;
+            }
             break;
           case 'scroll':
             code += `    await page.evaluate(() => window.scrollBy(0, window.innerHeight));\n`;
             break;
           case 'wait':
-            code += `    await page.waitForSelector('${selector}'); // Wait for ${elementDesc}\n`;
+            code += `    await page.waitForLoadState('networkidle');\n`;
             break;
           case 'extract':
             code += `    const content = await page.textContent('body');\n`;
             break;
           default:
-            code += `    // Action: ${actionType} on ${elementDesc}\n`;
-        }
-
-        // Add assertion if step indicates a "Then" statement
-        if (step.stepDescription.toLowerCase().startsWith('then')) {
-          code += `    // Verify: ${step.stepDescription}\n`;
-          code += `    // Add appropriate assertion here\n`;
+            code += `    // TODO: Implement ${actionType} action\n`;
         }
       }
 
@@ -125,11 +154,33 @@ test.describe('${scenarioName}', () => {
     code += `  });\n});
 `;
 
-    this.logger.debug('[PlaywrightCodeGenerator] Generated code', {
-      lines: code.split('\n').length,
-      steps: steps.length,
-    });
-
     return code;
   }
+
+  private escapeSelector(selector: string): string {
+    // Escape single quotes in selector
+    return selector.replace(/'/g, "\\'");
+  }
+
+  private escapeString(str: string): string {
+    // Escape single quotes and backslashes
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+
+  private extractValueFromDescription(description: string): string {
+    // Try to extract value from common patterns like: "I enter X as 'value'" or "I enter 'value'"
+    const patterns = [
+      /(?:as|with)\s+['""]([^'""]*)["']/i,
+      /['""]([^'""]*)["']/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return '';
+  }
 }
+

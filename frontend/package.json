@@ -1,0 +1,17 @@
+{
+  "name": "nocode-ui-automation-frontend",
+  "version": "1.0.0",
+  "description": "React frontend for No-Code UI Automation",
+  "private": true,
+  "scripts": {
+    "start": "http-server ./public -p 3000 -c-1",
+    "dev": "http-server ./public -p 3000 -c-1 -o"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

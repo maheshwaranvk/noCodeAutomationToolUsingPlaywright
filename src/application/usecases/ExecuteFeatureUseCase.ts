@@ -1,5 +1,5 @@
 import { ExecuteFeatureRequest, ExecuteFeatureResponse } from '@application/dto';
-import { Feature, ExecutionResult } from '@domain/models';
+import { Feature, ExecutionResult, TestArtifact } from '@domain/models';
 import {
   BrowserExecutorPort,
   AIInterpreterPort,
@@ -23,11 +23,9 @@ export class ExecuteFeatureUseCase {
     private logger: LoggerPort
   ) {
     this.featureParser = new GherkinFeatureParser(logger);
-    const retryPolicy = new DefaultRetryPolicy(2);
     this.scenarioExecutionService = new ScenarioExecutionService(
       browserExecutor,
       aiInterpreter,
-      retryPolicy,
       logger
     );
     this.stepInterpretationService = new StepInterpretationService(aiInterpreter, logger);
@@ -39,6 +37,7 @@ export class ExecuteFeatureUseCase {
       this.logger.info('[ExecuteFeatureUseCase] Execution started', {
         retryCount: request.retryCount,
         featureLength: request.featureText.length,
+        targetUrl: request.targetUrl || 'Not specified',
       });
 
       // Parse feature file
@@ -59,9 +58,11 @@ export class ExecuteFeatureUseCase {
         scenarioId: scenario.id,
         scenarioName: scenario.name,
         stepCount: scenario.steps.length,
+        targetUrl: request.targetUrl,
       });
 
-      const executionResult = await this.scenarioExecutionService.executeScenario(scenario);
+      const retryPolicy = new DefaultRetryPolicy(request.retryCount || 2, this.logger);
+      const executionResult = await this.scenarioExecutionService.executeScenario(scenario, request.targetUrl, retryPolicy);
       this.logger.info('[ExecuteFeatureUseCase] Scenario execution completed', {
         status: executionResult.status,
         stepCount: executionResult.stepExecutions.length,
@@ -73,12 +74,66 @@ export class ExecuteFeatureUseCase {
       const codeGenResponse = await this.codeGenerator.generate({
         executionResult,
         featureText: request.featureText,
+        targetUrl: request.targetUrl,
       });
       executionResult.generatedCode = codeGenResponse.code;
       this.logger.info('[ExecuteFeatureUseCase] Test code generated', {
         filename: codeGenResponse.filename,
         codeLength: codeGenResponse.code.length,
       });
+
+      // Create screenshot artifacts from all step executions (passed and failed)
+      this.logger.info('[ExecuteFeatureUseCase] Creating screenshot artifacts...', {
+        stepCount: executionResult.stepExecutions.length,
+      });
+      
+      for (let i = 0; i < executionResult.stepExecutions.length; i++) {
+        const stepExecution = executionResult.stepExecutions[i];
+        this.logger.debug('[ExecuteFeatureUseCase] Checking screenshot for step', {
+          stepIndex: i + 1,
+          hasScreenshot: !!stepExecution.screenshot,
+          screenshotLength: stepExecution.screenshot?.length || 0,
+        });
+        
+        if (stepExecution.screenshot) {
+          const screenshotArtifact = new TestArtifact(
+            executionResult.id,
+            'screenshot',
+            `step-${i + 1}-${stepExecution.status}.png`,
+            stepExecution.screenshot // base64 content stored in path
+          );
+          executionResult.addArtifact(screenshotArtifact);
+          this.logger.debug('[ExecuteFeatureUseCase] Screenshot artifact created', {
+            stepId: stepExecution.stepId,
+            status: stepExecution.status,
+            filename: screenshotArtifact.filename,
+          });
+        }
+      }
+
+      // Capture video artifact if video recording was enabled
+      this.logger.info('[ExecuteFeatureUseCase] Checking for video artifact...');
+      try {
+        const videoPath = await this.browserExecutor.getVideoPath();
+        if (videoPath) {
+          this.logger.info('[ExecuteFeatureUseCase] Video artifact detected', { videoPath });
+          const videoArtifact = new TestArtifact(
+            executionResult.id,
+            'video',
+            `execution-recording.webm`,
+            videoPath // store the file path so artifact store can copy it
+          );
+          executionResult.addArtifact(videoArtifact);
+          this.logger.debug('[ExecuteFeatureUseCase] Video artifact created', {
+            filename: videoArtifact.filename,
+          });
+        } else {
+          this.logger.debug('[ExecuteFeatureUseCase] No video artifact found');
+        }
+      } catch (videoError) {
+        const videoErrorMsg = videoError instanceof Error ? videoError.message : String(videoError);
+        this.logger.warn('[ExecuteFeatureUseCase] Failed to capture video artifact', { error: videoErrorMsg });
+      }
 
       // Save artifacts
       this.logger.info('[ExecuteFeatureUseCase] Saving artifacts...', {
@@ -103,7 +158,21 @@ export class ExecuteFeatureUseCase {
         description: se.stepDescription,
         status: se.status,
         duration: se.duration,
+        errorMessage: se.errorMessage,
       }));
+
+      // Add artifacts to response (screenshots, videos, etc.)
+      // Use execution ID + filename to create the correct API path
+      response.artifacts = executionResult.artifacts.map(artifact => ({
+        type: artifact.type,
+        filename: artifact.filename,
+        path: `${executionResult.id}/${artifact.filename}`, // API will serve from /artifacts/{executionId}/{filename}
+      }));
+
+      this.logger.info('[ExecuteFeatureUseCase] Response artifacts', {
+        count: response.artifacts.length,
+        artifacts: response.artifacts.map(a => ({ type: a.type, filename: a.filename, path: a.path })),
+      });
 
       const totalDuration = Date.now() - startTime;
       this.logger.info('[ExecuteFeatureUseCase] Execution completed successfully', {
@@ -122,6 +191,17 @@ export class ExecuteFeatureUseCase {
         duration: `${totalDuration}ms`,
       });
       throw error;
+    } finally {
+      // Close browser after execution to ensure fresh state for next execution
+      try {
+        this.logger.info('[ExecuteFeatureUseCase] Closing browser for clean state');
+        await this.browserExecutor.close();
+      } catch (closeError) {
+        const closeErrorMsg = closeError instanceof Error ? closeError.message : String(closeError);
+        this.logger.warn('[ExecuteFeatureUseCase] Error closing browser', {
+          error: closeErrorMsg,
+        });
+      }
     }
   }
 }
